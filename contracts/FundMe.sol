@@ -6,7 +6,7 @@ import { PriceConverter } from "./PriceConverter.sol";
 contract FundMe {
 
     uint public myVal = 1;
-    uint public minUSD = 5e18; // Sample Chainlink datafeed https://docs.chain.link/data-feeds/getting-started
+    uint public constant minUSD = 5e18; // Sample Chainlink datafeed https://docs.chain.link/data-feeds/getting-started
 
     // AggregatorV3Interface internal dataFeed;
     
@@ -14,6 +14,12 @@ contract FundMe {
     mapping(address funder => uint amtFunded) public addr2AmtFunded;
 
     using PriceConverter for uint;
+
+    address public immutable i_owner;
+
+    constructor(){
+        i_owner = msg.sender;
+    }
 
     function fund() public payable {
         myVal = myVal + 2;
@@ -23,8 +29,9 @@ contract FundMe {
         addr2AmtFunded[msg.sender] += msg.value;
     }
 
-    function withdraw() public {
-        
+    function withdraw() public onlyOwner {
+        require(msg.sender == i_owner, "FundMe__NotOwner");
+
         for (uint i = 0; i < funderz.length; i++) 
         {
             address funder = funderz[i];
@@ -33,10 +40,10 @@ contract FundMe {
         
         funderz = new address[](0);
 
-        payable(msg.sender).transfer(address(this).balance);
+        // payable(msg.sender).transfer(address(this).balance);
 
-        bool sendSucc = payable(msg.sender).send(address(this).balance);
-        require(sendSucc,"send failed");
+        // bool sendSucc = payable(msg.sender).send(address(this).balance);
+        // require(sendSucc,"send failed");
 
         (bool callSucc, ) = payable(msg.sender).call{value: address(this).balance}("");
         require(callSucc, "call failed");
@@ -45,5 +52,8 @@ contract FundMe {
 
     }
     
-
+    modifier onlyOwner {
+        require(msg.sender == i_owner, "FundMe__NotOwner");
+        _;
+    }
 }
