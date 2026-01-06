@@ -24,7 +24,7 @@ contract FundMe {
     function fund() public payable {
         myVal = myVal + 2;
         // https://docs.soliditylang.org/en/latest/units-and-global-variables.html#block-and-transaction-properties
-        require(msg.value.getConversionRate() > minUSD, "some message from Leo: didn't send enough ETH");
+        require(msg.value.getConversionRate() > minUSD, "some message from contract: didn't send enough ETH");
         funderz.push(msg.sender);
         addr2AmtFunded[msg.sender] += msg.value;
     }
@@ -53,7 +53,17 @@ contract FundMe {
     }
     
     modifier onlyOwner {
-        require(msg.sender == i_owner, "FundMe__NotOwner");
+        // require(msg.sender == i_owner, "FundMe__NotOwner");
+        if(msg.sender != i_owner) revert NotOwner();
         _;
     }
+
+    // Default functions : Receive, Fallback 
+    // https://docs.soliditylang.org/en/latest/contracts.html#special-functions
+
+    receive() external payable { fund(); }
+    fallback() external payable { fund(); }
+
 }
+
+error NotOwner();

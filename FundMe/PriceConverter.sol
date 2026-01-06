@@ -5,7 +5,6 @@ import {AggregatorV3Interface} from "@chainlink/contracts@1.5.0/src/v0.8/shared/
 
 library PriceConverter {
 
-
     function getPrice() internal view returns (uint) {
 
         AggregatorV3Interface dataFeed = AggregatorV3Interface(0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43);
@@ -27,4 +26,5 @@ library PriceConverter {
         AggregatorV3Interface dataFeed = AggregatorV3Interface(0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43);
         return dataFeed.version();
     }
+
 }
