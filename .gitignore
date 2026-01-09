@@ -5,7 +5,8 @@ artifacts
 .env
 
 
-**/lib/
+lib/
+
 # Compiler files
 cache/
 out/
@@ -21,3 +22,10 @@ docs/
 # Dotenv file
 .env
 .github/
+
+# zkSync
+**.log
+**/zkout/*
+
+# foundry
+**/broadcast/*

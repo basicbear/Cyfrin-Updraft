@@ -12,4 +12,7 @@
 
   # deploying with forge
   forge script script/DeploySimpleStorage.s.sol:DeploySimpleStorage --rpc-url $RPC_URL --account defaultKey --sender $PK_ADDR --broadcast -vvvv
+
+  # convert hex to dec 
+  cast --to-base 0x000000000000000000000000000000000000000000000000000000000000007b d
   ```
