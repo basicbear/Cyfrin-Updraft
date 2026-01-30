@@ -13,6 +13,7 @@ contract FundMeTest is Test {
     address USER = makeAddr("user");
     uint256 constant SEND_VALUE = 0.1 ether;
     uint256 constant STARTING_BALANCE = 10 ether;
+    uint256 constant GAS_PRICE = 1;
 
     function setUp() external {
         DeployFundMe deployFundMe = new DeployFundMe();
@@ -90,6 +91,7 @@ contract FundMeTest is Test {
         vm.expectRevert();
         vm.prank(USER); // USER isn't contract owner. "withdraw" has onlyOwner modifer
         fm.withdraw();
+
     }
 
     function testWithdrawWithASingleFunder() public funded {
@@ -98,8 +100,16 @@ contract FundMeTest is Test {
         uint256 startingFundMeBalancec = address(fm).balance;
 
         // Act
+        // https://docs.soliditylang.org/en/latest/units-and-global-variables.html#block-and-transaction-properties
+        uint256 gasStart = gasleft(); 
+        
+        vm.txGasPrice(GAS_PRICE);
         vm.prank(fm.getOwner());
         fm.withdraw();
+
+        uint256 gasEnd = gasleft(); 
+        uint256 gasUsed = (gasStart - gasEnd) * tx.gasprice; // see above
+        console.log("BEAR - gasUsed - ", gasUsed);
 
         // Assert
         uint256 endingOwnerBalance = fm.getOwner().balance;
@@ -111,6 +121,26 @@ contract FundMeTest is Test {
     }
 
     function testWithdrawFromMultipleFunders() public funded {
+        /** 
+        
+        use `forge snapshot -m testWithdrawFromMultipleFunders` to get gas calc
+        outputs a file named `.gas-snapshot`
+
+        use `txGasPrice` https://getfoundry.sh/reference/cheatcodes/tx-gas-price/
+
+        Contracts to play with to learn more about storage
+        https://github.com/Cyfrin/foundry-fund-me-cu/blob/main/src/exampleContracts/FunWithStorage.sol
+        https://github.com/Cyfrin/foundry-fund-me-cu/blob/main/script/DeployStorageFun.s.sol
+
+        `forge inspect FundMe storageLayout`
+        `cast storage` - requires an anvil chain
+            https://updraft.cyfrin.io/courses/foundry/foundry-fund-me/solidity-storage-optimization
+        
+        https://www.evm.codes/
+            - shows cost of each opcode
+            - memory ops (51-53) cost much less than storage ops (54-55)
+        */ 
+
         uint160 numberOfFunders = 10;
         uint160 startingFunderIndex = 1;
 
@@ -122,7 +152,7 @@ contract FundMeTest is Test {
 
         uint startingOwnerBalance = fm.getOwner().balance;
         uint startingFundMeBalance = address(fm).balance;
-
+        
         vm.startPrank(fm.getOwner());
         fm.withdraw();
         vm.stopPrank();
@@ -132,7 +162,53 @@ contract FundMeTest is Test {
 
         assertEq(endingOwnerBalance, startingOwnerBalance + startingFundMeBalance);
         assertEq(endingFundMeBalance, 0);
+        
+    }
 
+    function testWithdrawFromMultipleFundersCheaper() public funded {
+        /** 
+        
+        use `forge snapshot -m testWithdrawFromMultipleFunders` to get gas calc
+        outputs a file named `.gas-snapshot`
 
+        use `txGasPrice` https://getfoundry.sh/reference/cheatcodes/tx-gas-price/
+
+        Contracts to play with to learn more about storage
+        https://github.com/Cyfrin/foundry-fund-me-cu/blob/main/src/exampleContracts/FunWithStorage.sol
+        https://github.com/Cyfrin/foundry-fund-me-cu/blob/main/script/DeployStorageFun.s.sol
+
+        `forge inspect FundMe storageLayout`
+        `cast storage` - requires an anvil chain
+            https://updraft.cyfrin.io/courses/foundry/foundry-fund-me/solidity-storage-optimization
+        
+        https://www.evm.codes/
+            - shows cost of each opcode
+            - memory ops (51-53) cost much less than storage ops (54-55)
+        
+        */ 
+
+        uint160 numberOfFunders = 10;
+        uint160 startingFunderIndex = 1;
+
+        for (uint160 i = startingFunderIndex; i < numberOfFunders; i++){
+            // does vm.prank & vm.deal 
+            hoax(address(i), SEND_VALUE);
+            fm.fund{value:SEND_VALUE}();
+        }
+
+        uint startingOwnerBalance = fm.getOwner().balance;
+        uint startingFundMeBalance = address(fm).balance;
+        
+        vm.startPrank(fm.getOwner());
+        fm.cheaperWithdraw();
+        vm.stopPrank();
+
+        uint endingFundMeBalance = address(fm).balance;
+        uint endingOwnerBalance = fm.getOwner().balance;
+
+        assertEq(endingOwnerBalance, startingOwnerBalance + startingFundMeBalance);
+        assertEq(endingFundMeBalance, 0);
+
+        
     }
 }

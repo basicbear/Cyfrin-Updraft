@@ -25,7 +25,7 @@ contract HelperConfig is Script{
 
 
     constructor(){
-        console.log("LEO: HelperConfig constructor ", block.chainid);
+        console.log("BEAR: HelperConfig constructor ", block.chainid);
         if (block.chainid == 11155111){
             activeNetworkConfig = getSepoliaEthConfig();
         } else if (block.chainid == 1){

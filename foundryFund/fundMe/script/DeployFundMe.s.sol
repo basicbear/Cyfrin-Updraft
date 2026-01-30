@@ -15,7 +15,7 @@ contract DeployFundMe is Script {
         
         address ethUsdPriceFeed = hc.activeNetworkConfig();
 
-        console.log("LEO: DeployFundMe ", ethUsdPriceFeed);
+        console.log("BEAR: DeployFundMe ", ethUsdPriceFeed);
         vm.startBroadcast(); // After this => Real trx!
         
         FundMe fm = new FundMe(ethUsdPriceFeed);
